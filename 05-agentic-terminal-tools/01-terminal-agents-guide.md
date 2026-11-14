@@ -72,3 +72,50 @@ One of the most powerful uses of a terminal agent is letting it fix a broken bui
 - **Use Git Branches:** Always run agents on a new feature branch.
 - **Review Every Diff:** Even though they are "autonomous," you should review the diff before merging.
 - **Limit Scope:** Give agents specific tasks rather than "fix the whole repo."
+
+## Example: Building a Simple Terminal Agent
+
+### Setup
+
+Set up your environment variables so the Claude CLI can authenticate:
+
+```bash
+# Set your Anthropic API key (store securely in production)
+export ANTHROPIC_API_KEY="sk-ant-..."
+
+# Optional: choose a model if the CLI supports it
+export CLAUDE_MODEL="claude-3-5-sonnet"
+```
+
+### Reusable Command Template
+
+Below is a tiny Bash function that turns a natural‑language task into a CLI call.  
+Save it in `~/.bashrc` or source it directly:
+
+```bash
+# generate_and_run: ask Claude to perform a terminal task
+# Usage: generate_and_run "description of the task"
+generate_and_run() {
+    local task="$1"
+    # The `-p` flag passes a prompt to the Claude CLI
+    claude -p "Perform the following terminal task: $task"
+}
+```
+
+### Usage Example – Log Rotation
+
+A common repetitive job is rotating log files. The following one‑liner asks Claude to rename `*.log` files to `*.txt`:
+
+```bash
+# Rename every .log file to .txt in the current directory
+generate_and_run "Rename every file with a .log extension to .txt"
+```
+
+**What happens under the hood**
+
+1. The function builds a prompt and invokes `claude -p`.
+2. Claude returns a shell command (e.g., `for f in *.log; do mv "$f" "${f%.log}.txt"; done`).
+3. The output is displayed in the terminal. You can copy‑paste it or pipe it directly into `bash` if you trust the model.
+4. Because the whole flow lives in a script, you can schedule it with `cron` or run it repeatedly for daily log rotation, file renaming, data extraction, etc.
+
+This tiny agent demonstrates the core loop—*prompt → command → execution*—that scales up to full‑blown autonomous workflows.
